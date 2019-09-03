@@ -1,0 +1,43 @@
+{
+  "type": "record",
+  "namespace": "com.hivemq.avro",
+  "name": "CarData",
+  "version": "1",
+  "fields": [
+    {
+      "name": "engine_coolant_temp",
+      "type": "float",
+      "doc": "Engine coolant temperature in °C"
+    },
+    {
+      "name": "intake_air_temp",
+      "type": "float",
+      "doc": "Air intake temperature in °C"
+    },
+    {
+      "name": "intake_air_flow_speed",
+      "type": "int",
+      "doc": "Air intake mass g/s"
+    },
+    {
+      "name": "battery_percentage",
+      "type": "float",
+      "doc": "Battery cell total percentage left"
+    },
+    {
+      "name": "current_draw",
+      "type": "int",
+      "doc": "Current in A drawn from the battery"
+    },
+    {
+      "name": "battery_voltage",
+      "type": "int",
+      "doc": "Battery pack voltage"
+    },
+    {
+      "name": "speed",
+      "type": "float",
+      "doc": "Speed of the vehicle based on engine data"
+    }
+  ]
+}
