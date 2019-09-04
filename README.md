@@ -7,20 +7,20 @@ See the Avro [schema](src/main/resources/cardata-v1.avsc) for more info on the d
 
 For probabilities of events and implementation details, see [CarModel](src/main/java/com/hivemq/CarModel.java)
 
-### Shock failure/degradation
+### Shock failure / degradation
 
 The car's "shock performance" is measured by accelerometers on the chassis at every corner of the vehicle.
 In the event of a bump, minor acceleration takes place.
 
 With a certain probability, the shock of a car might fail, in which case, the default acceleration at each iteration increases slightly and the acceleration in case of a bump is much larger.
 
-We assume that the acceleration data here is not a simple point in time measurement, but an aggregation over time between samples.
+We assume that the acceleration data here is not a simple point in time measurement, but an aggregation over time.
 
 ### Tire pressure loss
 
-The car might lose tire pressure with a certain probability. In this case, the pressure will drop below the assumed nominal range of `[30..35]`
+The car might lose tire pressure with a certain probability. In this case, the pressure will drop below the assumed nominal range of `[30..35]`psi.
 
-### Engine/Drive shaft degradation
+### Engine / Drive shaft degradation
 
 The car has vibration sensors which monitor the vibration of the engine.
 
@@ -38,4 +38,4 @@ The rate of decrease of the battery's percentage might increase greatly, indicat
 
 ### Outdated firmware
 
-Firmware version is indicated in the model, a single car might use an outdated software version.
+Firmware version is indicated in the model, a single car might use an outdated software version, e.g. due to not being online for a while.

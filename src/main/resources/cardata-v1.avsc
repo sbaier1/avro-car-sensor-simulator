@@ -80,12 +80,12 @@
       "doc": "Acceleration in m/s^2 of the front right chassis accelerometer"
     },
     {
-      "name": "accelerometer_1_3_value",
+      "name": "accelerometer_2_1_value",
       "type": "float",
       "doc": "Acceleration in m/s^2 of the back left chassis accelerometer"
     },
     {
-      "name": "accelerometer_1_4_value",
+      "name": "accelerometer_2_2_value",
       "type": "float",
       "doc": "Acceleration in m/s^2 of the back right chassis accelerometer"
     },
