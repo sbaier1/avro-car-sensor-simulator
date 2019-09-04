@@ -9,10 +9,10 @@ import org.apache.commons.lang3.RandomUtils;
 public class CarModel {
 
     // Failure Modes
-    private static final float SHOCK_DEGRADATION_PROBABILITY = 2F;
-    private static final float TIRE_PRESSURE_LOSS_PROBABILITY = 3F;
-    private static final float VIBRATION_DRIVE_SHAFT_DEGRADATION_PROBABILITY = 2F;
-    private static final float OVERHEATING_PROBABILITY = 1F;
+    private static final float SHOCK_DEGRADATION_PROBABILITY = 1F;
+    private static final float TIRE_PRESSURE_LOSS_PROBABILITY = 0.5F;
+    private static final float VIBRATION_DRIVE_SHAFT_DEGRADATION_PROBABILITY = 1F;
+    private static final float OVERHEATING_PROBABILITY = 0.2F;
     private static final float BATTERY_CELL_DEGRADATION_PROBABILITY = 1F;
     private static final float OUTDATED_FIRMWARE_PROBABILITY = 4F;
 
@@ -63,6 +63,7 @@ public class CarModel {
         final float prevBatteryPercentage;
         final float batteryVoltage;
         final float prevIntakeAirSpeed;
+        final float previousCoolantTemp;
         if (previousSample == null) {
             // (we assume that the time series starts at any point in time during a trip for now)
             previousSpeed = RandomUtils.nextFloat(0, 50);
@@ -76,14 +77,18 @@ public class CarModel {
                     prevBatteryPercentage * (FULLY_CHARGED_BATTERY_VOLTAGE - DISCHARGED_BATTERY_VOLTAGE);
             // We'll assume we're heading straight forward the whole time
             prevIntakeAirSpeed = previousSpeed * AIR_SPEED_MULTIPLIER;
+
+            previousCoolantTemp = RandomUtils.nextFloat(intakeAirTemp, intakeAirTemp + 20);
         } else {
             previousSpeed = previousSample.getSpeed();
             previousThrottlePos = previousSample.getThrottlePos();
             intakeAirTemp = previousSample.getIntakeAirTemp();
 
-            prevBatteryPercentage = previousSample.getBatteryPercentage();
+            prevBatteryPercentage = previousSample.getBatteryPercentage() - previousSpeed * 0.008F;
             batteryVoltage = previousSample.getBatteryVoltage();
             prevIntakeAirSpeed = previousSample.getIntakeAirFlowSpeed();
+
+            previousCoolantTemp = previousSample.getCoolantTemp() + previousSpeed * 0.008F;
         }
 
         // Update state of failure modes. Once an event happens the state is kept across iterations
@@ -101,14 +106,14 @@ public class CarModel {
         this.overheatingCoolant = overheatingCoolant || eventHappens(OVERHEATING_PROBABILITY);
         this.outdatedFirmware = outdatedFirmware || eventHappens(OUTDATED_FIRMWARE_PROBABILITY);
 
-        // The throttle position translates almost directly to current drawn in this model
+        // The throttle position translates almost directly to current drawn in this model (and also relates to the battery voltage)
         final float currentDraw = previousThrottlePos * (Math.abs(260 - batteryVoltage) + 5);
+
         // We will assume that there is no lag between the coolant temp sensor picking up the change
         // in temp from higher current between cells and engine
-        final float previousCoolantTemp = RandomUtils.nextFloat(intakeAirTemp, intakeAirTemp + 20);
         final float coolantTemp = overheatingCoolant ?
-                COOLANT_INERTIA * previousCoolantTemp + ((1 - COOLANT_INERTIA) * currentDraw * 2.5F)
-                : COOLANT_INERTIA * previousCoolantTemp + (1 - COOLANT_INERTIA) * currentDraw * 0.5F;
+                COOLANT_INERTIA * previousCoolantTemp + ((1 - COOLANT_INERTIA) * (previousCoolantTemp + currentDraw * 2.5F))
+                : COOLANT_INERTIA * previousCoolantTemp + (1 - COOLANT_INERTIA) * (previousCoolantTemp + currentDraw * 0.5F);
 
         // Instantaneous acceleration and deceleration with "recuperation" for simplicity
         final float speed = VEHICLE_INERTIA * previousSpeed + (1 - VEHICLE_INERTIA) * (previousThrottlePos * MAX_SPEED);
@@ -183,6 +188,7 @@ public class CarModel {
      * @return {@code true} if the event happens, {@code false} otherwise
      */
     private boolean eventHappens(final float percentage) {
-        return percentage < RandomUtils.nextFloat(0, 100);
+        System.out.println("Anomaly occured");
+        return percentage > RandomUtils.nextFloat(0, 100);
     }
 }

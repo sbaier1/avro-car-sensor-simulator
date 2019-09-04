@@ -34,10 +34,11 @@ public class Main {
 
             for (int i = 0; i < iterations; ++i) {
                 final Date timeStamp = Time.from(Instant.now().plusSeconds(10 * i));
-                for (CarModel car : cars) {
+                for (int j = 0; j < cars.size(); ++j) {
+                    final CarModel car = cars.get(j);
                     final CarData nextSample = car.nextValue();
                     printer.print(timeStamp.getTime() / 1000);
-                    printer.print("car" + (i + 1));
+                    printer.print("car" + (j + 1));
 
                     printer.print(nextSample.getCoolantTemp());
                     printer.print(nextSample.getIntakeAirTemp());
