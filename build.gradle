@@ -28,14 +28,12 @@ task generateAvro(type: com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask)
 	//point plugin to folder with generated POJOs
 	outputDir = file("${buildDir}/generated-sources/avro")
 }
+
 compileJava.source(generateAvro.outputs)
 sourceSets.main.java.srcDirs = ['build/generated-sources/avro', 'src/main/java']
-
-/*avro {
-    templateDirectory = "${project.projectDir}/src/main/resources"
-}*/
 
 dependencies {
 	testCompile group: 'junit', name: 'junit', version: '4.12'
 	implementation "org.apache.avro:avro:1.9.0"
+	implementation "org.apache.commons:commons-lang3:3.9"
 }
