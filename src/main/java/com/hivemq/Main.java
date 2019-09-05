@@ -1,38 +1,58 @@
 package com.hivemq;
 
 import com.hivemq.avro.CarData;
-import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Time;
 import java.time.Instant;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalUnit;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class Main {
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
 
-    public static void main(String[] args) throws Exception {
-        final List<CarModel> cars = IntStream.rangeClosed(0, 99)
+    public static final String CSV_FILE_PATH = "car-sensor-data.csv";
+
+    public static void main(String[] args) {
+        final int numIterations = getNumOrDefault(args, 0, 100);
+        final int numCars = getNumOrDefault(args, 1, 100);
+        log.info("Generating a CSV file with {} data points for {} car models to file {}", numIterations, numCars, CSV_FILE_PATH);
+        final List<CarModel> cars = IntStream.rangeClosed(1, numCars)
                 .mapToObj(i -> new CarModel())
                 .collect(Collectors.toList());
-        writeDataSet(cars);
+        writeDataSet(cars, numIterations);
     }
 
-    public static void writeDataSet(List<CarModel> cars) {
-        final int iterations = 100;
+    private static int getNumOrDefault(final String[] args, final int index, final int defaultNum) {
+        if (args.length > index) {
+            final String argString = args[index];
+            try {
+                final int count = Integer.parseInt(argString);
+                if (count > 0) {
+                    return count;
+                } else {
+                    log.error("Parameter must be a positive integer");
+                }
+            } catch (NumberFormatException ex) {
+                log.error("Not an integer {}", argString);
+            }
+        }
+        return defaultNum;
+    }
 
-        try (final CSVPrinter printer = new CSVPrinter(new FileWriter("test.csv"), CSVFormat.DEFAULT)) {
+    private static void writeDataSet(List<CarModel> cars, final int numIterations) {
+
+        try (final CSVPrinter printer = new CSVPrinter(new FileWriter(CSV_FILE_PATH), CSVFormat.DEFAULT)) {
             printHeader(printer);
 
-            for (int i = 0; i < iterations; ++i) {
+            for (int i = 0; i < numIterations; ++i) {
                 final Date timeStamp = Time.from(Instant.now().plusSeconds(10 * i));
                 for (int j = 0; j < cars.size(); ++j) {
                     final CarModel car = cars.get(j);

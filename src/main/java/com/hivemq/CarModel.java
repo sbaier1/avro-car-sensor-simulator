@@ -188,7 +188,6 @@ public class CarModel {
      * @return {@code true} if the event happens, {@code false} otherwise
      */
     private boolean eventHappens(final float percentage) {
-        System.out.println("Anomaly occured");
         return percentage > RandomUtils.nextFloat(0, 100);
     }
 }

@@ -3,6 +3,7 @@ buildscript {
 		jcenter()
 	}
 	dependencies {
+		classpath 'com.github.jengelman.gradle.plugins:shadow:5.1.0'
 		classpath "com.commercehub.gradle.plugin:gradle-avro-plugin:0.17.0"
 	}
 }
@@ -11,6 +12,7 @@ plugins {
 	id 'java'
 	id 'idea'
 }
+apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: "com.commercehub.gradle.plugin.avro-base"
 
 group 'com.hivemq'
@@ -20,6 +22,12 @@ sourceCompatibility = 1.8
 
 repositories {
 	mavenCentral()
+}
+
+jar {
+	manifest {
+		attributes 'Main-Class': 'com.hivemq.Main'
+	}
 }
 
 task generateAvro(type: com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
@@ -37,4 +45,7 @@ dependencies {
 	implementation "org.apache.avro:avro:1.9.0"
 	implementation "org.apache.commons:commons-lang3:3.9"
 	implementation "org.apache.commons:commons-csv:1.4"
+
+	// We will just use this for compile source set for simplicity
+	compile "org.slf4j:slf4j-simple:1.7.28"
 }

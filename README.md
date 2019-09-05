@@ -3,6 +3,20 @@
 Simulates an electric vehicle's sensor data over time, with synthetic failure modes.
 See the Avro [schema](src/main/resources/cardata-v1.avsc) for more info on the data stored in a sample.
 
+## Generate test data set
+
+Note: Ensure you are using at least Java 8
+
+`./generate_test_data.sh`
+
+You can also specify the number of data points per car and the number of cars to simulate, e.g.:
+
+`./generate_test_data.sh 50 20`
+
+for `50` data points and `20` cars to simulate.
+
+The file will be generated as `car-sensor-data.csv` in the current directory.
+
 ## Failure modes
 
 For probabilities of events and implementation details, see [CarModel](src/main/java/com/hivemq/CarModel.java)
