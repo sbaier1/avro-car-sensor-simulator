@@ -45,6 +45,8 @@ dependencies {
 	implementation "org.apache.avro:avro:1.9.0"
 	implementation "org.apache.commons:commons-lang3:3.9"
 	implementation "org.apache.commons:commons-csv:1.4"
+	implementation "org.jetbrains:annotations:16.0.1"
+	implementation files("device-simulator-plugin-sdk-1.0.0.jar")
 
 	// We will just use this for compile source set for simplicity
 	compile "org.slf4j:slf4j-simple:1.7.28"

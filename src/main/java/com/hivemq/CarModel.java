@@ -1,12 +1,17 @@
 package com.hivemq;
 
 import com.hivemq.avro.CarData;
-import org.apache.commons.lang3.RandomUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import static java.lang.Math.*;
+import static org.apache.commons.lang3.RandomUtils.nextFloat;
+import static org.apache.commons.lang3.RandomUtils.nextInt;
 
 /**
  * Models the physical properties and sensor values of an electric vehicle, including synthetic failure modes.
  */
-public class CarModel {
+class CarModel {
 
     // Failure Modes
     private static final float SHOCK_DEGRADATION_PROBABILITY = 1F;
@@ -33,7 +38,7 @@ public class CarModel {
     // Probability of running into a bump on the road in percent
     private static final float BUMP_PROBABILITY = 5F;
 
-    private CarData previousSample;
+    private @Nullable CarData previousSample;
 
     /* Failure mode state */
     private boolean pressureLossTire1;
@@ -52,7 +57,7 @@ public class CarModel {
 
     private boolean outdatedFirmware;
 
-    public CarData nextValue() {
+    @NotNull CarData nextValue() {
         // Time between samples in seconds, this will have to be replaced by rate in the device simulator
         // TODO in addition to inertia, we can use this to calculate changes over time, e.g. throttle is pushed harder -> speed will increase until next iteration
         final int timeStep = 5;
@@ -66,29 +71,29 @@ public class CarModel {
         final float previousCoolantTemp;
         if (previousSample == null) {
             // (we assume that the time series starts at any point in time during a trip for now)
-            previousSpeed = RandomUtils.nextFloat(0, 50);
+            previousSpeed = nextFloat(0, 50);
 
             // Much of the data depends on the throttle position,
             // so we generate a random throttle position first
-            previousThrottlePos = RandomUtils.nextFloat(0, 1);
-            intakeAirTemp = RandomUtils.nextFloat(15, 40);
-            prevBatteryPercentage = RandomUtils.nextFloat(0.3F, 1.0F);
+            previousThrottlePos = nextFloat(0, 1);
+            intakeAirTemp = nextFloat(15, 40);
+            prevBatteryPercentage = nextFloat(30F, 100F);
             batteryVoltage = DISCHARGED_BATTERY_VOLTAGE +
                     prevBatteryPercentage * (FULLY_CHARGED_BATTERY_VOLTAGE - DISCHARGED_BATTERY_VOLTAGE);
             // We'll assume we're heading straight forward the whole time
             prevIntakeAirSpeed = previousSpeed * AIR_SPEED_MULTIPLIER;
 
-            previousCoolantTemp = RandomUtils.nextFloat(intakeAirTemp, intakeAirTemp + 20);
+            previousCoolantTemp = nextFloat(intakeAirTemp, intakeAirTemp + 20);
         } else {
             previousSpeed = previousSample.getSpeed();
-            previousThrottlePos = previousSample.getThrottlePos();
+            previousThrottlePos = max(0, min(previousSample.getThrottlePos() + (0.5F - nextFloat(0F, 1F)), 1));
             intakeAirTemp = previousSample.getIntakeAirTemp();
 
-            prevBatteryPercentage = previousSample.getBatteryPercentage() - previousSpeed * 0.008F;
+            prevBatteryPercentage = previousSample.getBatteryPercentage() - previousSpeed * 0.001F;
             batteryVoltage = previousSample.getBatteryVoltage();
             prevIntakeAirSpeed = previousSample.getIntakeAirFlowSpeed();
 
-            previousCoolantTemp = previousSample.getCoolantTemp() + previousSpeed * 0.008F;
+            previousCoolantTemp = min(max(previousSample.getCoolantTemp() + previousSpeed * 0.008F - intakeAirTemp * 0.1F, 60F), intakeAirTemp);
         }
 
         // Update state of failure modes. Once an event happens the state is kept across iterations
@@ -107,7 +112,7 @@ public class CarModel {
         this.outdatedFirmware = outdatedFirmware || eventHappens(OUTDATED_FIRMWARE_PROBABILITY);
 
         // The throttle position translates almost directly to current drawn in this model (and also relates to the battery voltage)
-        final float currentDraw = previousThrottlePos * (Math.abs(260 - batteryVoltage) + 5);
+        final float currentDraw = max(previousThrottlePos * (abs(260 - batteryVoltage) + 4), 80);
 
         // We will assume that there is no lag between the coolant temp sensor picking up the change
         // in temp from higher current between cells and engine
@@ -123,10 +128,10 @@ public class CarModel {
                 speed * (VIBRATION_AMPLITUDE_MULTIPLIER * 1.5F)
                 : speed * VIBRATION_AMPLITUDE_MULTIPLIER;
 
-        final int tirePressure1 = pressureLossTire1 ? RandomUtils.nextInt(20, 25) : RandomUtils.nextInt(30, 35);
-        final int tirePressure2 = pressureLossTire2 ? RandomUtils.nextInt(20, 25) : RandomUtils.nextInt(30, 35);
-        final int tirePressure3 = pressureLossTire3 ? RandomUtils.nextInt(20, 25) : RandomUtils.nextInt(30, 35);
-        final int tirePressure4 = pressureLossTire4 ? RandomUtils.nextInt(20, 25) : RandomUtils.nextInt(30, 35);
+        final int tirePressure1 = pressureLossTire1 ? nextInt(20, 25) : nextInt(30, 35);
+        final int tirePressure2 = pressureLossTire2 ? nextInt(20, 25) : nextInt(30, 35);
+        final int tirePressure3 = pressureLossTire3 ? nextInt(20, 25) : nextInt(30, 35);
+        final int tirePressure4 = pressureLossTire4 ? nextInt(20, 25) : nextInt(30, 35);
 
         final boolean bumpHappens = eventHappens(BUMP_PROBABILITY);
         final float accelerometerValue1 = getShockAcceleration(shockFailure1, bumpHappens);
@@ -168,15 +173,15 @@ public class CarModel {
     private float getShockAcceleration(boolean shockFailed, boolean bumpHappens) {
         if (bumpHappens) {
             if (shockFailed) {
-                return RandomUtils.nextFloat(5, 7);
+                return nextFloat(5, 7);
             } else {
-                return RandomUtils.nextFloat(2, 3);
+                return nextFloat(2, 3);
             }
         } else {
             if (shockFailed) {
-                return RandomUtils.nextFloat(3, 4);
+                return nextFloat(3, 4);
             } else {
-                return RandomUtils.nextFloat(0, 1);
+                return nextFloat(0, 1);
             }
         }
     }
@@ -188,6 +193,6 @@ public class CarModel {
      * @return {@code true} if the event happens, {@code false} otherwise
      */
     private boolean eventHappens(final float percentage) {
-        return percentage > RandomUtils.nextFloat(0, 100);
+        return percentage > nextFloat(0, 100);
     }
 }
