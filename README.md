@@ -17,6 +17,12 @@ for `50` data points and `20` cars to simulate.
 
 The file will be generated as `car-sensor-data.csv` in the current directory.
 
+## Build load simulator
+
+The device simulator can simulate this model with multiple models, publishing their data to an MQTT broker with its behavior configured in `scenario.xml`.
+
+You can build the Docker image using `build-generator.sh`. This will add the MQTT payload generator to the device simulator base image.
+
 ## Failure modes
 
 For probabilities of events and implementation details, see [CarModel](src/main/java/com/hivemq/CarModel.java)
