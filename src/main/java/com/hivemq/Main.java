@@ -1,8 +1,10 @@
 package com.hivemq;
 
 import com.hivemq.avro.CarData;
+import com.hivemq.simulator.plugin.sdk.load.generators.PluginPayloadGeneratorInput;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,15 +21,47 @@ public class Main {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static final String CSV_FILE_PATH = "car-sensor-data.csv";
+    public static final PluginPayloadGeneratorInput EMPTY_INPUT = new PluginPayloadGeneratorInput() {
+        @Override
+        public @NotNull String getTopic() {
+            return "";
+        }
 
-    public static void main(String[] args) {
-        final int numIterations = getNumOrDefault(args, 0, 100);
-        final int numCars = getNumOrDefault(args, 1, 100);
-        log.info("Generating a CSV file with {} data points for {} car models to file {}", numIterations, numCars, CSV_FILE_PATH);
+        @Override
+        public long getRate() {
+            return 0;
+        }
+
+        @Override
+        public long getCount() {
+            return 0;
+        }
+
+        @Override
+        public @NotNull String getMessage() {
+            return "";
+        }
+    };
+
+    public static void main(String[] args) throws IOException {
+        final int numIterations = getNumOrDefault(args, 0, 30);
+        final int numCars = getNumOrDefault(args, 1, 500);
+        /*log.info("Generating a CSV file with {} data points for {} car models to file {}", numIterations, numCars, CSV_FILE_PATH);
         final List<CarModel> cars = IntStream.rangeClosed(1, numCars)
                 .mapToObj(i -> new CarModel())
                 .collect(Collectors.toList());
-        writeDataSet(cars, numIterations);
+        writeDataSet(cars, numIterations);*/
+        final List<CarDataPayloadGenerator> cars = IntStream.rangeClosed(1, numCars)
+                .mapToObj(i -> new CarDataPayloadGenerator())
+                .collect(Collectors.toList());
+        try (final FileWriter fileWriter = new FileWriter("testdata.txt")) {
+            for (CarDataPayloadGenerator car : cars) {
+                for (int i = 0; i < numIterations; ++i) {
+                    fileWriter.append(new String(car.nextPayload(EMPTY_INPUT).array())).append("\n");
+                }
+            }
+            fileWriter.flush();
+        }
     }
 
     private static int getNumOrDefault(final String[] args, final int index, final int defaultNum) {

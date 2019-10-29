@@ -69,6 +69,8 @@ class CarModel {
         final float batteryVoltage;
         final float prevIntakeAirSpeed;
         final float previousCoolantTemp;
+
+        boolean failureOccurred = false;
         if (previousSample == null) {
             // (we assume that the time series starts at any point in time during a trip for now)
             previousSpeed = nextFloat(0, 50);
@@ -110,6 +112,11 @@ class CarModel {
         this.driveShaftDegradation = driveShaftDegradation || eventHappens(VIBRATION_DRIVE_SHAFT_DEGRADATION_PROBABILITY);
         this.overheatingCoolant = overheatingCoolant || eventHappens(OVERHEATING_PROBABILITY);
         this.outdatedFirmware = outdatedFirmware || eventHappens(OUTDATED_FIRMWARE_PROBABILITY);
+
+        // Simple labelling
+        failureOccurred = pressureLossTire1 || pressureLossTire2 || pressureLossTire3 || pressureLossTire4
+                || shockFailure1 || shockFailure2 || shockFailure3 || shockFailure4
+                || driveShaftDegradation || overheatingCoolant || outdatedFirmware;
 
         // The throttle position translates almost directly to current drawn in this model (and also relates to the battery voltage)
         final float currentDraw = max(previousThrottlePos * (abs(260 - batteryVoltage) + 4), 80);
@@ -165,6 +172,8 @@ class CarModel {
                 .setCoolantTemp(coolantTemp)
                 .setCurrentDraw(currentDraw)
                 .setControlUnitFirmware(firmwareVersion)
+                // Basic failure mode labelling
+                .setFailureOccurred(failureOccurred ? "true" : "false")
                 .build();
         previousSample = nextModel;
         return nextModel;

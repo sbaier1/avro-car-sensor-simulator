@@ -37,6 +37,10 @@ task generateAvro(type: com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask)
 	outputDir = file("${buildDir}/generated-sources/avro")
 }
 
+avro {
+	fieldVisibility = "PRIVATE"
+}
+
 compileJava.source(generateAvro.outputs)
 sourceSets.main.java.srcDirs = ['build/generated-sources/avro', 'src/main/java']
 
